@@ -16,7 +16,7 @@ tags: [sql, sql, tips]
 Если у тебя просто по id выбираются записи из базы - это ок.
 Не нужно бояться сделать один лишний простой `SELECT` к базе.
 
-Такие запросы база может переваривать тысячами, и от одного лишнего ей не будет ничего. 
+Такие запросы база может переваривать тысячами, и от одного лишнего ей ничего не будет. 
 ```sql
 SELECT * FROM user WHERE id=:id
 ```
@@ -36,9 +36,7 @@ SELECT * FROM user WHERE id=3
 
 ```sql
 SELECT * FROM user WHERE id IN (1,2,3)
-```
-
-Если у тебя сложная ORM и она так не умеет, выброси ее и напиши свой запрос руками, например в репозитории. 
+``` 
 
 ## 3. Не оптимизируй джойнами
 
@@ -93,7 +91,7 @@ JOIN city ON city.id = user.city_id
 WHERE user.id IN (<ids>)
 ```
 
-Данный запрос породит дублирование данных, которое нужно будет как-то разруливать в твоей ORM.
+Данный запрос породит дублирование данных, которое нужно будет как-то разруливать.
 Плюс за джойн база тебе спасибо не скажет.
 
 А должно быть так:
@@ -117,29 +115,27 @@ SELECT * FROM city WHERE id IN (<ids>)
 
 ```sql
 SELECT * FROM country
-SELECT * FROM region WHERE id IN (<ids>)
-SELECT * FROM city WHERE id IN (<ids>)
-SELECT * FROM street WHERE id IN (<ids>)
+SELECT * FROM region WHERE country_id IN (<ids>)
+SELECT * FROM city WHERE region_id IN (<ids>)
+SELECT * FROM street WHERE city_id IN (<ids>)
 ```
 
-Но сложность в том, что между этими запросами вам нужно вычислить промежуточные id-шники на клиенте.
-И текущий пункт о том, что не нужно бояться этого делать.
-Если вдруг, ваша ORM не умеет автоматически вычислять промежуточные id - выбросите ее и напишите свой
-тонкий слой с простыми запросами.
+Но сложность в том, что между этими запросами вам нужно вычислить промежуточные id сущностей на клиенте.
+И текущий пункт о том, что не нужно бояться этого делать. Почти всегда это делается простыми map-функциями. 
 
 Пример кода на гипотетическом js:
 
-```angular2
+```js
 countries = countriesRepo.selectAll()
+countriesIds = countries.map(it => it.id)
 
-regionIds = countries.map(it => it.id)
-regions = regionsRepo.selectAll(regionIds)
+regions = regionsRepo.selectAllByCountries(countriesIds)
+regionsIds = regions.map(it => it.id)
 
-cityIds = regions.map(it => it.id)
-cities = citiesRepo.selectAll(cityIds)
+cities = citiesRepo.selectAllByRegions(regionsIds)
+citiesIds = cities.map(it => it.id)
 
-streetIds = cities.map(it => it.id)
-streets = streetsRepo.selectAll(streetIds)
+streets = streetsRepo.selectAllByCities(citiesIds)
 ```
 
 Все данные есть, можно делать с ними теперь что угодно.
@@ -147,6 +143,21 @@ streets = streetsRepo.selectAll(streetIds)
 Лучше отправить простой запрос к базе, и потом на клиенте все разложить как надо, чем
 пытаться делать запрос-франкенштейн, чтобы он вернул тебе данные в каком-то удобном для тебя виде, или
 потому что так работает твоя ORM. 
+
+## 6. Именование таблиц со связями many-many
+
+В таблицах со связями не должно быть данных, кроме id (и возможно временных меток создания).
+
+Есть таблицы, которые хранят связи many-many, и их именуют обычно так: `users_has_cars`, `user_to_car`, `user_car` 
+и т.д. По названию сразу понятно, что там хранятся связи в виде списков id.
+
+Когда в эти таблицы добавляются какие-то поля с другими данными (например `crashes_count`, `insurance_cost`), 
+эти таблицы нужно превращать в отдельные сущности, и соответственно, переименовывать таблицы. 
+В противном случае ты рискуешь столкнуться в проекте с такими 
+полноценными сущностями, как `UserHasCar`. И тебе придется с ними работать наравне с `User` и `Car`.
+Согласись, что `CarOwnership` лучше чем `UserHasCar`, хотя бы потому, что это существительное, а не утверждение.
+
+| **Как только в таблицу many-many добавляется поле с данными - переименовывай таблицу в полноценную сущность.**
 
 ## Вместо заключения, про ORM
 
