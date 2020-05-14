@@ -62,50 +62,51 @@ HTTP/1.1 422 Unprocessable Entity
         "type": "form-field-error",
         "field": "email",
         "id": "email-already-exists",
-        "fallback-message": "Such email already exists"
+        "message": "Such email already exists"
     },
     {
         "type": "form-field-error",
         "field": "password",
         "id": "password-too-weak",
-        "fallback-message": "Password too weak"
+        "message": "Password too weak"
     },
     {
         "type": "form-error",
         "id": "too-many-users",
-        "fallback-message": "Unable to create one more user."
+        "message": "Unable to create one more user."
     },
     {
         "type": "global-error",
         "id": "forbidden",
-        "fallback-message": "Not allowed"
+        "message": "Not allowed"
     },
     {
         "type": "global-error",
         "id": "jwt-token-expired",
-        "fallback-message": "Your auth-token expired. Please, login again"
+        "message": "Your auth-token expired. Please, login again"
     },
     {
         "type": "global-error",
         "id": "you-won-million",
-        "fallback-message": "You won 1 million dollars!"
+        "message": "You won 1 million dollars!"
     },
 ]
 ```
 
 Для каждого набора полей используется свой `type`.
 
-Поле `id` - это уникальный в рамках одного `type` id ошибки, на который можно подвязываться при обработке.
-Когда мы обрабатываем ошибку на клиенте, мы обычно показываем какое-то свое сообщение.
-Но если на сервере появляются новые ошибки и новая логика, то на старых клиентах нужно что-то показать
-в качестве сообщения - для этого используется `fallback-message`.
+Поле `id` - это уникальный id ошибки, на который можно подвязываться при обработке.
+Для отображения ошибки можно использовать **свое сообщение** или поле `message`, если оно вам подходит.
 
 ### Типы ошибок
 
 Можно выделить 3 типа ошибок, каждый из которых будет представлен отдельным классом.
-1. `FormFieldError(id, field, fallbackMessage)` ошибки валидации форм
-2. `FormError(id, fallbackMessage)` ошибки самих форм
-3. `GlobalError(id, fallbackMessage)` глобальные ошибки, которые могут прилететь на любой запрос 
+1. `FormFieldError(id, field, message)` ошибки валидации форм
+2. `FormError(id, message)` ошибки самих форм
+3. `GlobalError(id, message)` глобальные ошибки, которые могут прилететь на любой запрос
+
+`GlobalError` и `FormError` хотя и одинаковые по структуре, но логически должны обрабатываться в разных
+местах. Поэтому они разделены на разные классы. 
 
 ### Глобальные ошибки с отдельным статусом
 
@@ -160,9 +161,9 @@ Http-статусов ограниченное количество, сто кл
 `type` - нужен для маппинга ошибок в классы. Т.е. сейчас нам нужно всего 3 класса (по одному для
 каждого `type`). Если мапить по `id`, то кол-во классов будет слишком большим.
 
-#### **Q: Fallback-message на английском, как его перевести на язык клиента?**
+#### **Q: Message в ошибке на английском, как его перевести на язык клиента?**
 
-Передавать в заголовке язык клиента, чтобы fallback-message переводил бэкенд. 
+Передавать в заголовке язык клиента, чтобы `message` переводил бэкенд. 
 
 
 ## Итого
