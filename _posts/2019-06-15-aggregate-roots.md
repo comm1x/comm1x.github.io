@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Агрегирующие контейнеры в ответах REST-API"
-description: "Агрегирующие контейнеры в ответах REST-API"
-tags: [rest, aggregate, roots, api]
+title: "Ответы-агрегаты в REST-API"
+description: "Ответы-агрегаты в REST-API"
+tags: [rest, aggregate, roots, api, ответы, агрегаты]
 ---
 
 ## TLDR
